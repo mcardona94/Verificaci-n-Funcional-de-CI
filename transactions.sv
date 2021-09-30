@@ -18,15 +18,15 @@ class mensaje #(parameter pckg_sz = 16, parameter drvrs = 4);
 	constraint dest_range {destino inside {[min_destino:max_destino]};} //Constraint para controlar rango de destino
 	
 	function void inf_reporte_consola (string tag = "");
-      	$display("[%s] tiempo_retardo=%g flg_brdcst = 0x%0h fuente=0x%0h destino=0x%0h datos=0x%0h",
+      	$display("[%s] Tiempo de retardo=%g Bandera de broadcast = 0x%0h fuente=0x%0h destino=0x%0h datos=0x%0h",
 					 tag,tiempo_retardo,flg_brdcst, fuente, destino, datos);
 	endfunction
 
 endclass
 
-// Transaccion driver_CHCKR (enviada desde el driver) 
+// Transaccion driver a checker
 
-class Trans_driver_chckr #(parameter pckg_sz = 32);
+class Trans_driver_chckr #(parameter pckg_sz = 16);
 	
   	//Datos del paquete
  	bit [7:0] destino; 
@@ -45,7 +45,7 @@ class Trans_driver_chckr #(parameter pckg_sz = 32);
     endfunction 
 
 	function void reporte_consola (string tag = "");
-      $display("[%s] tiempo_envio=%0d fuente=0x%0h destino=0x%0h datos=0x%0h, brdcst = %0d ",
+      $display("[%s] Tiempo de envio =%0d fuente=0x%0h destino=0x%0h datos=0x%0h, brdcst = %0d ",
 		tag,tiempo_envio, fuente, destino, dato, brdcst);
 	endfunction
 
@@ -67,13 +67,13 @@ class trans_monitor_checker #(parameter pckg_sz=16);
     endfunction 
 
     function void reporte_consola (string tag = "");
-        $display("[%0t] %0s msj del dispositivo 0x%0h, Datos=0x%0h, t_recive = %0d",$time, tag, receptor,dato, tiempo_recepcion);
+        $display("[%0t] %0s transaccion del dispositivo 0x%0h, Datos=0x%0h, t_recive = %0d",$time, tag, receptor,dato, tiempo_recepcion);
     endfunction
 endclass      
 
 //Transaccion que contiene Resultados    
 
-class trans_resultados #(parameter pckg_sz=10);
+class trans_resultados #(parameter pckg_sz=16);
     
   	//Datos del mensaje 
     bit [7:0] fuente;
@@ -98,6 +98,6 @@ class trans_resultados #(parameter pckg_sz=10);
     endfunction 
 
     function void reporte_consola (string tag = "");
-        $display("[%0t] [%0s] [Pass] transaccion completada Fuente=0x%0h, Destino=0x%0h, Dato enviado=0x%0h, Dato recibido=0x%0h,Receptor=0x%0h, t_recive = %0d, tiempo_envio=%0d, delay = %0d",$time, tag, fuente, destino, dato_enviado, dato_recibido, receptor, tiempo_recepcion, tiempo_envio, delay);
+        $display("[%0t] %0s Transaccion completada Fuente=0x%0h, Destino=0x%0h, Dato enviado=0x%0h, Dato recibido=0x%0h,Receptor=0x%0h, t_recive = %0d, tiempo_envio=%0d, delay = %0d",$time, tag, fuente, destino, dato_enviado, dato_recibido, receptor, tiempo_recepcion, tiempo_envio, delay);
     endfunction
 endclass

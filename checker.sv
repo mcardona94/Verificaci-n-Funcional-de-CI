@@ -137,7 +137,7 @@ class Checker #(parameter drvrs=4, parameter pckg_sz=16);
 						end
 					end else begin   //Alerta cuando no se encuentra un msj enviado
                       	$display("[%0t] No se encontró transaccion enviada para el dato entrante:", $time);//asignar aserciones
-						datos_monitor.reporte_consola("Fail_Checker");
+						datos_monitor.reporte_consola("Checker: reporte de fallo");
 					end
             	end 
           	end
@@ -145,7 +145,7 @@ class Checker #(parameter drvrs=4, parameter pckg_sz=16);
           	if(mensaje_enviado.size() > 0) begin  //revisa si un msj enviado no tuvo respuesta 
 				$display("[%0t] No hubo respuesta a la siguiente transaccion:",$time);
                 foreach(mensaje_enviado[n]) begin
-                	mensaje_enviado[n].reporte_consola("Fail_Checker");     
+                	mensaje_enviado[n].reporte_consola("Checker: reporte de fallo");     
 				end
 			end
         end

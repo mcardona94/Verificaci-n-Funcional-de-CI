@@ -33,15 +33,15 @@ class driver #(parameter drvrs = 4, parameter pckg_sz = 16, parameter cola_size 
         @(posedge vif.clk);
         forever begin
           mensaje #(.pckg_sz(pckg_sz),.drvrs(drvrs)) msj;
-                    $display("[%0t] [Driver] Esperando mensaje...", $time);
+                    $display("[%0t] Driver: Esperando mensaje...", $time);
           
           //Espera a recibir un mensaje del agente
           agent_drvr_mbx.get(msj);
-          msj.inf_reporte_consola("Driver"); //Desplega informacion de mensaje
+          msj.inf_reporte_consola("Driver:"); //Desplega informacion de mensaje
           //Ingresa msj al FIFO
           fifo_mbx[msj.fuente].put(msj);
           @(posedge vif.clk);
-            $display("T=%0t [Driver] Mensaje enviado", $time);
+            $display("T=%0t Driver: Mensaje enviado", $time);
             ->driver_func;
         end
       end
@@ -70,14 +70,14 @@ class driver #(parameter drvrs = 4, parameter pckg_sz = 16, parameter cola_size 
                 				//Ciclo de retraso
                                 while(delay <= msj2.tiempo_retardo)begin
                                   	if(delay >= msj2.tiempo_retardo)begin
-                                        msj2.inf_reporte_consola("FIFO");
+                                        msj2.inf_reporte_consola("FIFO:");
                     					msj2chkr.tiempo_envio = $time;
                                         msj2chkr.destino = msj2.destino;
                                         msj2chkr.dato = msj2.datos;
                                         msj2chkr.fuente = msj2.fuente;
                     					msj2chkr.brdcst = msj2.flg_brdcst;
-                                        msj2chkr.reporte_consola("FIFO DRIVER");
-                                        cola[jj].push(paquete); //insercion a la cola
+                                        msj2chkr.reporte_consola("FIFO:");
+                                        cola[jj].push(paquete); //insercion del dato
                                         checker_mbx.put(msj2chkr);
                                         ->notificacion_envio;
                                         break;  
@@ -96,7 +96,7 @@ class driver #(parameter drvrs = 4, parameter pckg_sz = 16, parameter cola_size 
                                 @(posedge vif.clk);
                                 //Manejo de pop                            
                             	if(vif.pop[0][jj])begin
-                              		vif.D_pop[0][jj] = cola[jj].pop("INTERFASE DRIVER");
+                              		vif.D_pop[0][jj] = cola[jj].pop("DRIVER:");
                                   	vif.pndng[0][jj] <= cola[jj].get_pndg();
 						        end else begin
                                   	vif.D_pop[0][jj] <= cola[jj].cola[$]; 
