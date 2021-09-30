@@ -2,90 +2,106 @@
 
 class driver #(parameter drvrs = 4, parameter pckg_sz = 16, parameter cola_size = 5);
   //Variables Manejo de Driver
-  mailbox agent_drvr_mbx;  //Llamado del mailbox para poder comunicarse con el agente
-  mailbox chkr_mbx; //Mailbox auxiliar para conectarlo con el del checker
-  virtual bus_if #(.drvrs(drvrs),.pckg_sz(pckg_sz)) vif;  //Instanciacion de la interfaz con el DUT
-  event driver_ready;  //En este caso se utiliza el mismo evento para reportar que termino de trabajar
-  event pck_sent; //Este evento es para indicar que el paquete fue enviado 
-  fifo #(.cola_size(cola_size), .pckg_sz(pckg_sz)) cola [drvrs-1:0]; //Se instancia el objeto FIFO asignandole el tamaño de la cola, tamaño del paquete y a la vez generando el arreglo cola 
-  //Mailbox auxiliar creado para hacer uso de la FIFO
+  mailbox driver_agent_amb_mbx;  //Generacion de mailbox para la comunicacion con el agente y el ambiente
+  virtual bus_if #(.drvrs(drvrs),.pckg_sz(pckg_sz)) vif;  //Interfase de conexion virtual con el DUT
+  event driver_func;  //Evento usado para reportar a otros dispositivos finalizacion de tasks del driver 
+  event notificacion_envio;  //Evento para reportar el envio del mensaje al checker 
+  int csvFile;
+  string line;
+  
+  //Variables para FIFO
   mailbox fifo_mbx[drvrs-1:0]; //Mailboxes para pasar datos a los procesos hijos
-
-  task run(); //Inicia ejecucion del proceso padre
-    $display("[%0t] El driver fue inicializado", $time);
-    for (int i = 0; i < drvrs; i++) begin //Generacion de iteraciones que varian el dispositivo en el mailbox auxiliar de la fifo y los elementos de la cola
+    fifo #(.cola_size(cola_size), .pckg_sz(pckg_sz)) cola [drvrs-1:0]; //Se instancia la clase de fifo 
+  bit cmplt;
+  
+  //Envio a checker
+    mailbox checker_mbx;
+  
+  task run();
+        
+        $display("[%0t] El driver fue inicializado", $time);
+    
+        //Inicializacion de mailboxes y FIFOs
+    for (int i = 0; i < drvrs; i++) begin 
       fifo_mbx[i] = new();
       cola[i] = new();
     end
     
     fork
-	  // Proceso de envio del paquete del driver a la fifo
+      //Proceso de recepcion de mensajes 
       begin
         @(posedge vif.clk);
         forever begin
-          paquete #(.pckg_sz(pckg_sz),.drvrs(drvrs)) pck;
-                    $display("[%0t] Driver: a la espera de transaccion", $time);
-          agent_drvr_mbx.get(pck); // Aqui le pide al mailbox que conecta con el agente que le transmita el paquete
-          pck.print_paquete("Driver: Instrucciones del agente: "); //imprime la informacion enviada por el agente para tener una idea de los parametros que va a tener la prueba
-          fifo_mbx[pck.disp_origen].put(pck); //Introduce paquete en el mialbox de la FIFO en el slot respectivo al dispositivo en el que se esta en el momento
+          mensaje #(.pckg_sz(pckg_sz),.drvrs(drvrs)) msj;
+                    $display("[%0t] [Driver] Esperando mensaje...", $time);
+          
+          //Espera a recibir un mensaje del agente
+          driver_agent_amb_mbx.get(msj);
+          msj.inf_reporte_consola("Driver"); //Desplega informacion de mensaje
+          //Ingresa msj al FIFO
+          fifo_mbx[msj.fuente].put(msj);
           @(posedge vif.clk);
-            $display("T=%0t Driver: transaccion realizada, paquete enviado la FIFO", $time);
-            ->driver_ready; //indica que ya el driver envio el paquete en la FIFO
+            $display("T=%0t [Driver] Mensaje enviado", $time);
+            ->driver_func;
         end
       end
-	  // 
+      
+      //Proceso de los FIFO 
       begin 
-        // Proceso de interaccion del driver con el checker
+        // Generacion de subprocesos
         for (int j = 0; j < drvrs; j++) begin
-                    automatic int jj = j; //definicion de variable que se va a sobreescribir automaticamente en cada proceso
-          fork		  
+                    automatic int jj = j;
+          fork 
+            //Proceso de recepcion de datos del DRIVER
             begin
-              automatic bit [pckg_sz-9:0] paquete_inst; 
-              int delay = 0; //variable almacenar el retardo temporal del proceso 
+              automatic bit [pckg_sz-1:0] paquete; //Variable de datos para el fifo
+              int delay = 0; //variable para implementar retraso
                             @(posedge vif.clk);
                             forever begin
-                                paquete #(.pckg_sz(pckg_sz),.drvrs(drvrs)) pck2; //creacion de objeto de tipo paquete
-                                trans_driver_checker #(.pckg_sz(pckg_sz)) pck2_trans = new(); //creacion de objeto de tipo transferencia de driver a checker
+                                mensaje #(.pckg_sz(pckg_sz),.drvrs(drvrs)) msj2;
+                                Trans_driver_chckr #(.pckg_sz(pckg_sz)) msj2chkr = new();
                                 delay = 0;  
+                              
                                 @(posedge vif.clk);
-                                fifo_mbx[jj].get(pck2); //obtiene dato de la fifo 
-                                paquete_inst[pckg_sz-1:pckg_sz-8] = pck2.destino;
-                                paquete_inst[pckg_sz-9:0] = pck2.datos;
+                                fifo_mbx[jj].get(msj2); //toma el dato
+                                paquete[pckg_sz-1:pckg_sz-8] = msj2.destino;
+                                paquete[pckg_sz-9:0] = msj2.datos;
+                              
                 				//Ciclo de retraso
-                                while(delay <= pck2.retardo_aleatorio)begin
-                                  	if(delay >= pck2.retardo_aleatorio)begin
-										//se pone en contacto el objeto pck2 generado con el objeto transaccion pck2_trans generado
-                                        pck2.print_paquete("Paquete en la FIFO ");
-                    					pck2_trans.t_envio = $time;
-                                        pck2_trans.destino = pck2.destino;
-                                        pck2_trans.dato = pck2.datos;
-                                        pck2_trans.disp_origen = pck2.disp_origen;
-                    					pck2_trans.brdcst = pck2.bandera_broadcast;
-                                        pck2_trans.print("Paquete en el Checker enviado por el driver ");
-                                        cola[jj].push(paquete_inst); //se introduce el paquete al arreglo cola
-                                        chkr_mbx.put(pck2_trans);
-                                        ->pck_sent; //se concluye el evento del envio de paquete iniciado anteriormente
-                                        break;  //se genera un break cuando ya se alcanza el tiempo de retardo aleatorio generado
+                                while(delay <= msj2.tiempo_retardo)begin
+                                  	if(delay >= msj2.tiempo_retardo)begin
+                                        msj2.inf_reporte_consola("FIFO");
+                    					msj2chkr.tiempo_envio = $time;
+                                        msj2chkr.destino = msj2.destino;
+                                        msj2chkr.dato = msj2.datos;
+                                        msj2chkr.fuente = msj2.fuente;
+                    					msj2chkr.brdcst = msj2.flg_brdcst;
+                                        msj2chkr.reporte_consola("FIFO DRIVER");
+                                        cola[jj].push(paquete); //insercion a la cola
+                                        checker_mbx.put(msj2chkr);
+                                        ->notificacion_envio;
+                                        break;  
                   					end
                                     @(posedge vif.clk);
-                                    delay =  delay + 1; //aumento del tiempo de retardo por ciclo
+                                    delay =  delay + 1;
                 				end
                             end
                         end
             
                         begin
-                            bit [pckg_sz-9:0] paquete_inst = {pckg_sz-1{1'b0}};
+                            bit [pckg_sz-1:0] paquete = {pckg_sz-1{1'b0}};
                             @(posedge vif.clk);
                           forever begin
+                            	
                                 @(posedge vif.clk);
-                                //Proceso de POP                            
+                                //Manejo de pop                            
                             	if(vif.pop[0][jj])begin
-                              		vif.D_pop[0][jj] = cola[jj].pop("conectada al driver");
+                              		vif.D_pop[0][jj] = cola[jj].pop("INTERFASE DRIVER");
                                   	vif.pndng[0][jj] <= cola[jj].get_pndg();
 						        end else begin
                                   	vif.D_pop[0][jj] <= cola[jj].cola[$]; 
                                 end
-                                //Señal de pndng
+                                //manejo de bandera de pndng
                                 if(cola[jj].get_pndg() == 1) begin
                                   	vif.pndng[0][jj] <= 1;
                                 end else begin

@@ -201,12 +201,12 @@ module serializer #(parameter pckg_sz = 32) (
   input s_in,
   input rst,
   input clk,
-  input [pckg_sz-9:0] P_in,
+  input [pckg_sz-1:0] P_in,
   output s_out,
-  output [pckg_sz-9:0] P_out
+  output [pckg_sz-1:0] P_out
   );
-  wire [pckg_sz-9:0] q;
-  wire [pckg_sz-9:0] d;
+  wire [pckg_sz-1:0] q;
+  wire [pckg_sz-1:0] d;
 
   genvar i;
   generate
@@ -498,7 +498,7 @@ endmodule
 module ntrfs_cntrl #(parameter pckg_sz = 32, parameter ntrfs_id = 0, parameter broadcast = {8{1'b1}}) (
   input clk,
   input reset,
-  input [pckg_sz-9:0] D_in,
+  input [pckg_sz-1:0] D_in,
   input bs_grnt,
   input pndng,
   inout bs_bsy,
@@ -594,8 +594,8 @@ module bs_ntrfs #(parameter pckg_sz = 32, parameter ntrfs_id = 0, parameter broa
   input reset,
   input bs_grnt,
   input pndng,
-  input [pckg_sz-9:0] D_pop,
-  output [pckg_sz-9:0] D_push,
+  input [pckg_sz-1:0] D_pop,
+  output [pckg_sz-1:0] D_push,
   output push,
   output pop,
   output bs_rqst,
@@ -737,8 +737,8 @@ module bs_gnrtr #(parameter drvrs = 4, parameter pckg_sz = 16, parameter broadca
   input [drvrs-1:0] pndng,
   output [drvrs-1:0] push,
   output [drvrs-1:0] pop,
-  input [drvrs-1:0][pckg_sz-9:0] D_pop,
-  output [drvrs-1:0][pckg_sz-9:0] D_push
+  input [drvrs-1:0][pckg_sz-1:0] D_pop,
+  output [drvrs-1:0][pckg_sz-1:0] D_push
 );
   wire bus;
   wire bs_bsy;
@@ -923,8 +923,8 @@ module bs_ntrfs_n_rbtr #(parameter pckg_sz = 32, parameter ntrfs_id = 0, paramet
   input clk,
   input reset,
   input pndng,
-  input [pckg_sz-9:0] D_pop,
-  output [pckg_sz-9:0] D_push,
+  input [pckg_sz-1:0] D_pop,
+  output [pckg_sz-1:0] D_push,
   output push,
   output pop,
   inout bus,
@@ -993,8 +993,8 @@ module bs_gnrtr_n_rbtr #(parameter bits = 1,parameter drvrs = 4, parameter pckg_
   input  pndng[bits-1:0][drvrs-1:0],
   output push[bits-1:0][drvrs-1:0],
   output pop[bits-1:0][drvrs-1:0],
-  input  [pckg_sz-9:0] D_pop[bits-1:0][drvrs-1:0],
-  output [pckg_sz-9:0] D_push[bits-1:0][drvrs-1:0]
+  input  [pckg_sz-1:0] D_pop[bits-1:0][drvrs-1:0],
+  output [pckg_sz-1:0] D_push[bits-1:0][drvrs-1:0]
 );
   wire bus[bits-1:0];
   wire bs_bsy[bits-1:0];

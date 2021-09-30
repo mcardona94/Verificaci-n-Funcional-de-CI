@@ -1,104 +1,103 @@
 // Clases para las transacciones
 
-
-// Definicion del objeto paquete:
-class paquete #(parameter pckg_sz = 16, parameter drvrs = 4);
+class mensaje #(parameter pckg_sz = 16, parameter drvrs = 4);
 	
-	rand bit [7:0] destino; //Variable aleatorizable que indica el destino del paquete
-	rand bit [pckg_sz-9:0] datos; // Informacion del paquete de datos aleatorizable
-	rand bit [drvrs-1:0] disp_origen; //Driver de origen de los datos aleatorizable
-	rand int retardo_aleatorio; //Tiempo de retardo aleatorizable 
-	bit bandera_broadcast; //Bandera que avisa si se realiza un broadcast
-	int max_retardo;//valor maximo del tiempo de retardo definido
-	int max_dir; //Maxima direccion generada
-	int min_dir; //Minima direccion generada
+	rand bit [7:0] destino; //Destino de la informacion
+	rand bit [pckg_sz-9:0] datos; // Bits de informacion
+	rand bit [7:0] fuente; //Driver que envia los datos
+	rand int tiempo_retardo; //Tiempo de retraso 
+	bit flg_brdcst; //Bandera para saber si genera mensaje de broadcast
+	int max_retardo;//control de retardo 
+	int max_destino; //Maxima direccion generada
+	int min_destino; //Minima direccion generada
 	
-  	constraint rango_origen {disp_origen inside {[0:drvrs-1]};} //Constraint para que se haga la transaccion desde un dispositivo dentro de la cantidad creada (de 0 a cantidad de drivers -1)
+  	constraint my_range {fuente inside {[0:drvrs-1]};} //Constraint para que no se envien mensajes de un disp inexistente
 	
-	constraint rango_retardo {retardo_aleatorio inside {[0:max_retardo]};} //Constraint para definir el rango de valores del tiempo de retardo aleatorizable
+	constraint delay_range {tiempo_retardo inside {[0:max_retardo]};} //Constraint para que el tiempo no sea negativo ni demasiado grande
 	
-	constraint rango_destino {destino inside {[min_dir:max_dir]};} //Constraint para controlar rango de valores de destino
+	constraint dest_range {destino inside {[min_destino:max_destino]};} //Constraint para controlar rango de destino
 	
-	function void print_paquete (string tag = "");
-      	$display("[%s] retardo_aleatorio=%g bandera_de_broadcast = 0x%0h dispositivo_origen=0x%0h destino=0x%0h datos=0x%0h",
-					 tag,retardo_aleatorio,bandera_broadcast, disp_origen, destino, datos);
+	function void inf_reporte_consola (string tag = "");
+      	$display("[%s] tiempo_retardo=%g flg_brdcst = 0x%0h fuente=0x%0h destino=0x%0h datos=0x%0h",
+					 tag,tiempo_retardo,flg_brdcst, fuente, destino, datos);
 	endfunction
 
 endclass
 
-// Transaccion de driver a checker
+// Transaccion driver_CHCKR (enviada desde el driver) 
 
-class trans_driver_checker #(parameter pckg_sz = 16);
+class Trans_driver_chckr #(parameter pckg_sz = 32);
 	
-  	//Datos para que el checker sepa el paquete enviado
+  	//Datos del paquete
  	bit [7:0] destino; 
 	bit [pckg_sz-9:0] dato;
-	bit [7:0] disp_origen;
+	bit [7:0] fuente;
   	bit brdcst;
-	int t_envio;
+	int tiempo_envio;
 	
-  	//Inicializa los valores de los objetos de la transaccion 
-    function new();
-      this.dato = 0;
-      this.destino = 0;
-      this.t_envio = 0;	
-      this.disp_origen = 0;
-      this.brdcst = 0; 
-    endfunction 
-
-	function void print (string tag = "");
-      $display("[%s] t_envio=%0d disp_origen=0x%0h destino=0x%0h datos=0x%0h, brdcst = %0d ",
-		tag,t_envio, disp_origen, destino, dato, brdcst);
-	endfunction
-endclass
-
-//Transaccion enviada desde monitor a checker)    
-      
-class trans_monitor_checker #(parameter pckg_sz=16);
-  	//Informacion de dato recibido 
-    bit [pckg_sz-9:0] dato;
-    bit [7:0] receptor;
-    int t_recepcion;
-    
   	//Inicializa los valores
     function new();
       this.dato = 0;
-      this.receptor = 0;
-      this.t_recepcion = 0;	
+      this.destino = 0;
+      this.tiempo_envio = 0;	
+      this.fuente = 0;
+      this.brdcst = 0; 
     endfunction 
 
-    function void print (string tag = "");
-        $display("[%0t] %0s Dispositivo: 0x%0h, Datos=0x%0h, tiempo_de_recepcion = %0d",$time, tag, receptor,dato, t_recepcion)
+	function void reporte_consola (string tag = "");
+      $display("[%s] tiempo_envio=%0d fuente=0x%0h destino=0x%0h datos=0x%0h, brdcst = %0d ",
+		tag,tiempo_envio, fuente, destino, dato, brdcst);
+	endfunction
+
+endclass
+
+//Transaccion trans_monitor_checker  (Enviada desde monitor a checker)    
+            
+class trans_monitor_checker #(parameter pckg_sz=16);
+  	//Datos del paquete recibido 
+    bit [pckg_sz-9:0] dato;
+    bit [7:0] receptor;
+    int tiempo_recepcion;
+    
+  	//Inicializa los parametros del objeto transaccion
+    function new();
+      this.dato = 0;
+      this.receptor = 0;
+    	this.tiempo_recepcion = 0;	
+    endfunction 
+
+    function void reporte_consola (string tag = "");
+        $display("[%0t] %0s msj del dispositivo 0x%0h, Datos=0x%0h, t_recive = %0d",$time, tag, receptor,dato, tiempo_recepcion);
     endfunction
 endclass      
 
-//Transaccion Resultado (Empaqueta los resultados de envio)     
+//Transaccion que contiene Resultados    
 
-class Trans_resultado #(parameter pckg_sz=16);
+class trans_resultados #(parameter pckg_sz=10);
     
-  	//Datos del paquete 
-    bit [7:0] disp_origen;
+  	//Datos del mensaje 
+    bit [7:0] fuente;
     bit [7:0] destino;
 	bit [7:0] receptor;
     bit [pckg_sz-9:0] dato_enviado;
     bit [pckg_sz-9:0] dato_recibido;
-    int t_recepcion;
-    int t_envio;
+    int tiempo_recepcion;
+    int tiempo_envio;
     int delay;
 
 	//Inicializa los valores
     function new();
-        this.disp_origen = 0;
+        this.fuente = 0;
         this.destino = 0;
         this.receptor = 0;
     	this.dato_enviado = 0;
       	this.dato_recibido = 0;
-        this.t_recepcion = 0;	
-        this.t_envio = 0;
+        this.tiempo_recepcion = 0;	
+        this.tiempo_envio = 0;
         this.delay = 0;
     endfunction 
 
-    function void print (string tag = "");
-        $display("[%0t] [%0s] Transaccion completada dispositivo_origen=0x%0h, Destino=0x%0h, Dato enviado=0x%0h, Dato recibido=0x%0h,Receptor=0x%0h, t_recive = %0d, t_envio=%0d, delay = %0d",$time, tag, disp_origen, destino, dato_enviado, dato_recibido, receptor, t_recepcion, t_envio, delay);
+    function void reporte_consola (string tag = "");
+        $display("[%0t] [%0s] [Pass] transaccion completada Fuente=0x%0h, Destino=0x%0h, Dato enviado=0x%0h, Dato recibido=0x%0h,Receptor=0x%0h, t_recive = %0d, tiempo_envio=%0d, delay = %0d",$time, tag, fuente, destino, dato_enviado, dato_recibido, receptor, tiempo_recepcion, tiempo_envio, delay);
     endfunction
 endclass

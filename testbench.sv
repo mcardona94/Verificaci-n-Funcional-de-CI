@@ -2,6 +2,7 @@
 `timescale 1ns/100ps
 `include "interface.sv"
 `include "transactions.sv"
+`include "scoreboard.sv"
 `include "fifoem.sv"
 `include "driver.sv"
 `include "monitor.sv"
@@ -14,9 +15,11 @@
 module tb;
     reg clk; //creacion de la variable de clock
     reg rst; // creacion de la variable de reset
-    parameter pckg = 16; //tamaño del paquete_inst de datos
+    parameter pckg = 16; //tamaño del paquete de datos
     parameter drvr = 4; // cantidad de dispositivos generados
-  	parameter cola = 5; // tamaño de las colas para acumular las transacciones o paquetes generados
+  	parameter cola = 5; // tamaño de las colas para acumular las transacciones o mensajes generados
+    int csvFile;
+    string line;
 
     int delay; //variable para delay del test
   	int size; //variable para tamaño del test
@@ -59,14 +62,14 @@ module tb;
           	vif.D_pop[0][k] = 0;
           	vif.pndng[0][k] = 0;
         end
-    	$dumpfile("waves.vcd");
+      $dumpfile("waves.vcd");
         $dumpvars(1, DUT);        
 		// se inicializa el test por medio de un proceso hijo con el fork
         fork    
             t0.run(); //test se inicia
         join_none
       	
-      	#130000 
+      	#160000 
       	size = t0.ambiente_inst.checker_inst.delay.size(); //aqui se obtiene el numero de procesos o transacciones del checker
 		//se inicializan con valor 0 las variables de retardo promedio y total
         retardo_total = 0; 
@@ -80,11 +83,11 @@ module tb;
         retardo_promedio = retardo_total / size;
  
       $display("Resultados: ");
-      $display("Transacciones realizadas: %g",size); // imprime el valor de la cantidad de transacciones de paquete_insts realizadas
-      $display("Tiempo de retardo promedio: %f",retardo_promedio); //imprime el valor del retardo promedio calculado
+      $display("Transacciones realizadas: %g",size);
+      $display("Tiempo de retardo promedio: %0.3f",retardo_promedio);
     end       
     always @(posedge clk) begin
-      if($time >  140000) begin //aqui se usa el limitante de tiempo para finalizar el test
+      if($time >  180000) begin //aqui se usa el limitante de tiempo para finalizar el test
           $display("[t=%0t] Test Completado",$time);
           $finish;
         end 
