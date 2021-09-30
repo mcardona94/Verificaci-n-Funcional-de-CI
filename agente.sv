@@ -19,7 +19,7 @@ class agente #(parameter pckg_sz = 16, parameter drvrs = 4, parameter brdcst_ind
 	function new();
 		num_msjs = 20;
 		max_retardo = 5;
-      	max_destino = 20;
+      	max_destino = 0;
       	min_destino = 0;
       	caso_uso = 0;
       	broadcast_ind = 0;
