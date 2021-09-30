@@ -27,7 +27,7 @@ class score_board #(parameter pckg_sz=16);
 /// Esta funcion me crea el archivo .csv para poder escribir en el
 
   function void openReport();
-    csvFile = $fopen ("./Scoreboard.csv", "a");
+	  csvFile = $fopen ("./Scoreboard_Report.csv", "a");
   endfunction
 
 /// Esta funcion es para escribir en el archivo de reporte abierto anteriormente toda la informacion de las transacciones realizadas
