@@ -8,7 +8,7 @@ class monitor #(parameter drvrs=4, parameter pckg_sz=16, parameter cola_size = 5
   	virtual bus_if #(.drvrs(drvrs),.pckg_sz(pckg_sz)) vif; //Conexion virtual con el DUT
   	fifo #(.cola_size(cola_size), .pckg_sz(pckg_sz)) fifo_out [drvrs-1:0]; // FIFO de recepcion
 	bit [pckg_sz-1:0] temp; //variable auxiliar
-  	mailbox mntr_mbx = new(drvrs); //mailbox para almacenar el mensaje proveniente de la transaccion con el checker
+  	mailbox mntr_chkr_mbx = new(drvrs); //mailbox para almacenar el mensaje proveniente de la transaccion con el checker
   	
   	task run();
       	$display("[%0t] El monitor fue inicializado", $time);       
@@ -44,7 +44,7 @@ class monitor #(parameter drvrs=4, parameter pckg_sz=16, parameter cola_size = 5
                             		msj.dato = temp[pckg_sz-9:0];
                             		msj.tiempo_recepcion = $time;
                             		msj.receptor = idx;
-                           	 		mntr_mbx.put(msj);
+                           	 		mntr_chkr_mbx.put(msj);
                         		end
 
                 			end 

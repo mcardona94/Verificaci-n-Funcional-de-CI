@@ -2,7 +2,7 @@
 
 class driver #(parameter drvrs = 4, parameter pckg_sz = 16, parameter cola_size = 5);
   //Variables Manejo de Driver
-  mailbox driver_agent_amb_mbx;  //Generacion de mailbox para la comunicacion con el agente y el ambiente
+  mailbox agent_drvr_mbx;  //Generacion de mailbox para la comunicacion con el agente y el ambiente
   virtual bus_if #(.drvrs(drvrs),.pckg_sz(pckg_sz)) vif;  //Interfase de conexion virtual con el DUT
   event driver_func;  //Evento usado para reportar a otros dispositivos finalizacion de tasks del driver 
   event notificacion_envio;  //Evento para reportar el envio del mensaje al checker 
@@ -36,7 +36,7 @@ class driver #(parameter drvrs = 4, parameter pckg_sz = 16, parameter cola_size 
                     $display("[%0t] [Driver] Esperando mensaje...", $time);
           
           //Espera a recibir un mensaje del agente
-          driver_agent_amb_mbx.get(msj);
+          agent_drvr_mbx.get(msj);
           msj.inf_reporte_consola("Driver"); //Desplega informacion de mensaje
           //Ingresa msj al FIFO
           fifo_mbx[msj.fuente].put(msj);

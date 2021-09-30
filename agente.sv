@@ -13,7 +13,7 @@ class agente #(parameter pckg_sz = 16, parameter drvrs = 4, parameter brdcst_ind
   	bit [7:0] broadcast_ind;
 	event driver_func; //evento que va a reportar la conclusion del funcionamiento del driver
   	event agent_func; //evento que va a reportar la conclusion del funcionamiento del agente 
-	mailbox driver_agent_amb_mbx; //Mailbox del driver
+	mailbox agent_drvr_mbx; //Mailbox del driver
   	
   	//Inicializa variables de control
 	function new();
@@ -46,7 +46,7 @@ class agente #(parameter pckg_sz = 16, parameter drvrs = 4, parameter brdcst_ind
               			msj.flg_brdcst = 0;
             		end
 					$display("[%0t] Agente: Transaccion %0d/%0d creada", $time, i+1,num_msjs);
-        			driver_agent_amb_mbx.put(msj);//Espera a que el driver termine de enviar un mensaje
+        			agent_drvr_mbx.put(msj);//Espera a que el driver termine de enviar un mensaje
 					@(driver_func);
 				end
             end
@@ -66,7 +66,7 @@ class agente #(parameter pckg_sz = 16, parameter drvrs = 4, parameter brdcst_ind
               			msj.flg_brdcst = 0;
             		end
 					$display("[%0t] Agente: Transaccion %0d/%0d creada", $time, i+1,num_msjs);
-          			driver_agent_amb_mbx.put(msj);//Espera a que el driver termine de enviar un mensaje
+          			agent_drvr_mbx.put(msj);//Espera a que el driver termine de enviar un mensaje
 					@(driver_func);
 				end
             end

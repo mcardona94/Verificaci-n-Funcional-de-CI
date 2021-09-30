@@ -2,8 +2,8 @@
 
 class Checker #(parameter drvrs=4, parameter pckg_sz=16);
 	// Mailboxes para comunicacion de Checker con otros dispositivos
-    mailbox mntr_mbx;  
-    mailbox driver_mbx;
+    mailbox mntr_chkr_mbx;  
+    mailbox driver_chkr_mbx;
   	mailbox test_mbx;
     mailbox chkr_sc;
 	// Creacion de variable para el archivo .csv
@@ -34,14 +34,14 @@ class Checker #(parameter drvrs=4, parameter pckg_sz=16);
          	int pcks_recibidos;
           	
           	// Obtiene los mensajes del driver
-          	while(driver_mbx.num()>0)begin 
-              	driver_mbx.get(datos_driver); 
+          	while(driver_chkr_mbx.num()>0)begin 
+              	driver_chkr_mbx.get(datos_driver); 
               	this.mensaje_enviado.push_back(datos_driver);
             end
           	
           	// Obtiene los mensajes del monitor
-          	while(mntr_mbx.num()>0)begin
-              	mntr_mbx.get(datos_monitor); 
+          	while(mntr_chkr_mbx.num()>0)begin
+              	mntr_chkr_mbx.get(datos_monitor); 
             	this.mensaje_recibido.push_back(datos_monitor);
           	end
 

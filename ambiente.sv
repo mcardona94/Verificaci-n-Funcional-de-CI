@@ -11,9 +11,9 @@ class ambiente #(parameter pckg_sz, parameter drvrs, parameter cola_size, parame
 	Checker #(.pckg_sz(pckg_sz), .drvrs(drvrs)) checker_inst; // declaracion del checker
 	
 	//Declaracion de los Mailboxes
-	mailbox driver_agent_amb_mbx;
-  	mailbox mntr_mbx;
-  	mailbox driver_mbx;
+	mailbox agent_drvr_mbx;
+  	mailbox mntr_chkr_mbx;
+  	mailbox driver_chkr_mbx;
 	
 	//Declaracion 
 	event driver_func;
@@ -25,9 +25,9 @@ class ambiente #(parameter pckg_sz, parameter drvrs, parameter cola_size, parame
 	
 	function new();
 		//Instanciar Mailbox
-		driver_agent_amb_mbx = new();
-		mntr_mbx = new();
-		driver_mbx = new();
+		agent_drvr_mbx = new();
+		mntr_chkr_mbx = new();
+		driver_chkr_mbx = new();
 		
 		//Instanciar modulos
 		driver_inst = new();
@@ -38,22 +38,22 @@ class ambiente #(parameter pckg_sz, parameter drvrs, parameter cola_size, parame
 		//Conexion de las interfaces y mailboxes
 		//Driver
       	driver_inst.vif = _if; 
-  		driver_inst.driver_agent_amb_mbx = driver_agent_amb_mbx;
+  		driver_inst.agent_drvr_mbx = agent_drvr_mbx;
 		driver_inst.driver_func = driver_func;
-      	driver_inst.checker_mbx = driver_mbx;
+      	driver_inst.checker_mbx = driver_chkr_mbx;
 		
       	//agente
-		agente_inst.driver_agent_amb_mbx = driver_agent_amb_mbx;
+		agente_inst.agent_drvr_mbx = agent_drvr_mbx;
       	agente_inst.driver_func = driver_func;
       	agente_inst.agent_func = agent_func;
 		
       	//Monitor
 		monitor_inst.vif = _if;
-      	monitor_inst.mntr_mbx = mntr_mbx;
+      	monitor_inst.mntr_chkr_mbx = mntr_chkr_mbx;
 		
       	//Checker
-		checker_inst.driver_mbx = driver_mbx;
-      	checker_inst.mntr_mbx = mntr_mbx;
+		checker_inst.driver_chkr_mbx = driver_chkr_mbx;
+      	checker_inst.mntr_chkr_mbx = mntr_chkr_mbx;
       	checker_inst.flag_end = agent_func;
       
 	endfunction
