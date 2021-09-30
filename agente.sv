@@ -45,10 +45,10 @@ class agente #(parameter pckg_sz = 16, parameter drvrs = 4, parameter brdcst_ind
           			end else begin
               			msj.flg_brdcst = 0;
             		end
-					$display("[%0t] Agente: Transaccion %0d/%0d creada", $time, i+1,num_msjs);
-        			agent_drvr_mbx.put(msj);//Espera a que el driver termine de enviar un mensaje
-					@(driver_func);
-				end
+			$display("[%0t] Agente: Transaccion %0d/%0d creada", $time, i+1,num_msjs);
+        		agent_drvr_mbx.put(msj);//Espera a que el driver termine de enviar un mensaje
+			@(driver_func);
+			end
             end
           	1: begin //Broadcast 
       			
@@ -65,7 +65,7 @@ class agente #(parameter pckg_sz = 16, parameter drvrs = 4, parameter brdcst_ind
           			end else begin
               			msj.flg_brdcst = 0;
             		end
-					$display("[%0t] Agente: Transaccion %0d/%0d creada", $time, i+1,num_msjs);
+					$display("[%0t] Agente: Transaccion con Broadcast %0d/%0d creada", $time, i+1,num_msjs);
           			agent_drvr_mbx.put(msj);//Espera a que el driver termine de enviar un mensaje
 					@(driver_func);
 				end
